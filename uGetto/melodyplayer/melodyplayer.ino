@@ -1,7 +1,7 @@
 static uint8_t i;
 static uint8_t j;
 
-#define T_MIN = 17
+#define T_MIN 17
 #define  BUZZER_PIN  PB0
 
 #include <avr/io.h>
