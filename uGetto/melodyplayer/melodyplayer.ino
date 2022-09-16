@@ -17,64 +17,86 @@ static  uint8_t comp;
 #include "sound_generation.h"
 #include "rick_new.h"
 
+
+uint8_t playing = 0;
+
+  uint8_t k = 0;
+
 int main(void)
 {
-	DDRB = 0b00000001; // set BUZZER pin as OUTPUT
-	PORTB = 0b00000000; // set all pins to LOW
-	TCCR0A |= (1<<WGM01); // set timer mode to Fast PWM
-	TCCR0A |= (1<<COM0A0); // connect PWM pin to Channel A of Timer0
+  DDRB = 0b00000001; // set BUZZER pin as OUTPUT
+  PORTB = 0b00000000; // set all pins to LOW
+  TCCR0A |= (1<<WGM01); // set timer mode to Fast PWM
+  TCCR0A |= (1<<COM0A0); // connect PWM pin to Channel A of Timer0
+
+  DDRB |= 1 << DDB4;     // define PB4 - LED as output
+  DDRB &= ~ (1 << DDB3); // define PB3 as input 
+
+  GIMSK |= 1 << PCIE;       // enable PCINT[0:5] pin change interrupt
+  PCMSK |= 1 << PCINT3;     // configure interrupt at PB3
+
+  PORTB |= 1 << PB3;    // enable pull up resistor at PB1
+  sei();   
 
 
   uint8_t noteNum;
   uint8_t dur;
-  
-	_delay_ms(1000);
 
-  for(j = 0; j < SONGLENGTH; j += 2)
-  {
-    noteNum = pgm_read_byte_near(song + j);
-    dur = pgm_read_byte_near(song + j + 1);
-    playNote(noteNum, dur);
-    playNote(NOTE_STOP, 1);
+
+
+  
+  _delay_ms(1000);
+
+  while (1) {
+
+    if (playing == 1) {
+      PORTB &= ~(1 << PB4);
+      noteNum = pgm_read_byte_near(song + k);
+       dur = pgm_read_byte_near(song + k + 1);
+      playNote(noteNum, dur);
+      k = k+2 < SONGLENGTH ? k+2 : 0;
+   }
+   else {
+       PORTB |= 1 << PB4;
+    }
+    
+
   }
 
 
-  /*
-
-  uint32_t ret;
-  Sound *val;
-  ret = pgm_read_word_near((uint8_t *)&song + 0);
-  val = (Sound *)&ret;
-  uint8_t note = val->noteNum;
-  uint8_t dur = val->duration_cycles;
   
-  playNote(note, dur);
+}
 
-  */
-  /*
-  for(int a = 0; a < SONGLENGTH; a++)
-  {
-    uint8_t noteNum = song[a].noteNum;
-    uint8_t dur = song[a].duration_cycles;
-    playNote(&noteNum, &dur);
-  }
-  */
+uint8_t read_pin(uint8_t pin) {
+  return (PINB & (1 << pin)) >> pin; 
+}
 
-   /*
-	// Walk through all octaves
-	for (i = 3; i < 8; ++i) {
-		for (j = 0; j < 12; ++j)
-            playNote(12*i+j, 8);
 
-		_delay_ms(2000);
-	}
+uint8_t is_button_pressed(uint8_t pin) {
+
+   if (!read_pin(PB3)) {    
+    _delay_ms(50);
+   if (!read_pin(PB3)) {
+        return 1;
+      } 
+   }
+   return 0;
   
-  
-	stop();
-	 _delay_ms(1500);
+}
 
-	while (1) {
-        _delay_ms(5000);
-	}
-  */
+
+
+
+
+
+ISR(PCINT0_vect) {
+   
+   if (is_button_pressed(PB3)) { 
+    PORTB |= 1 << PB4;
+   }
+   else  {
+    
+    k = 0;
+    playing = 1- playing;
+   }
 }
