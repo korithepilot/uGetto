@@ -622,10 +622,6 @@ const PROGMEM uint8_t song[] = {
     1,
 
     NOTE_FS5,
-    3,
-    NOTE_FS5,
-    3,
-    NOTE_E5,
-    6};
+    3};
 
-#define SONGLENGTH 581
+#define SONGLENGTH 577

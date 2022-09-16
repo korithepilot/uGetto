@@ -92,11 +92,11 @@ uint8_t is_button_pressed(uint8_t pin) {
 ISR(PCINT0_vect) {
    
    if (is_button_pressed(PB3)) { 
-    PORTB |= 1 << PB4;
    }
    else  {
     
     k = 0;
     playing = 1- playing;
+    stop();
    }
 }
